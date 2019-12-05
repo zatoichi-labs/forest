@@ -23,6 +23,7 @@ pub struct NetworkService {
     executor: TaskExecutor,
     out_transmitter: mpsc::UnboundedSender<NetworkEvent>,
     message_receiver: mpsc::UnboundedReceiver<NetworkMessage>,
+    net_sender: mpsc::UnboundedSender<NetworkMessage>,
     pub libp2p: Arc<Mutex<Libp2pService>>,
 }
 
@@ -58,28 +59,25 @@ impl NetworkService {
         log: &Logger,
         outbound_transmitter: mpsc::UnboundedSender<NetworkEvent>,
         executor: &TaskExecutor,
-    ) -> (
-        Self,
-        mpsc::UnboundedSender<NetworkMessage>,
-    ) {
+    ) ->
+        Self
+    {
         let (tx, rx) = mpsc::unbounded_channel();
 
         let libp2p_service = Arc::new(Mutex::new(Libp2pService::new(log, config)));
 
         let (exit_tx, exit_rx) = tokio::sync::oneshot::channel();
 
-        (
-            NetworkService {
-                logger: *log,
-                libp2p: libp2p_service,
-                exit_sender: exit_tx,
-                exit_receiver: exit_rx,
-                executor: executor,
-                out_transmitter: outbound_transmitter,
-                message_receiver: rx,
-            },
-            tx,
-        )
+        NetworkService {
+            logger: *log,
+            libp2p: libp2p_service,
+            exit_sender: exit_tx,
+            exit_receiver: exit_rx,
+            executor: executor,
+            out_transmitter: outbound_transmitter,
+            message_receiver: rx,
+            net_sender: tx,
+        }
     }
 }
 
