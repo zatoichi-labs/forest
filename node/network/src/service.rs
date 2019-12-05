@@ -42,8 +42,6 @@ impl service::Service for NetworkService {
         );
         Ok(())
     }
-    // message_receiver: mpsc::UnboundedReceiver<NetworkMessage>,
-    // exit_rx: tokio::sync::oneshot::Receiver<u8>,
 
     fn stop(&self) -> Result<(), service::Error> {
         // TODO figure out proper number
