@@ -16,17 +16,17 @@ pub enum NetworkMessage {
 
 /// The NetworkService receives commands through a channel which communicates with Libp2p.
 /// It also listens to the Libp2p service for
-pub struct NetworkService<'T> {
+pub struct NetworkService {
     logger: Logger,
     exit_sender: tokio::sync::oneshot::Sender<u8>,
     exit_receiver: tokio::sync::oneshot::Receiver<u8>,
-    executor: &'T TaskExecutor,
+    executor: TaskExecutor,
     out_transmitter: mpsc::UnboundedSender<NetworkEvent>,
     message_receiver: mpsc::UnboundedReceiver<NetworkMessage>,
     pub libp2p: Arc<Mutex<Libp2pService>>,
 }
 
-impl service::Service for NetworkService<'_> {
+impl service::Service for NetworkService {
     fn name() -> String {
         "NetworkService".to_owned()
     }
@@ -35,7 +35,7 @@ impl service::Service for NetworkService<'_> {
         start(
             self.logger.clone(),
             self.libp2p.clone(),
-            self.executor,
+            &self.executor,
             self.out_transmitter,
             self.message_receiver,
             self.exit_receiver,
@@ -52,7 +52,7 @@ impl service::Service for NetworkService<'_> {
     }
 }
 
-impl NetworkService<'_> {
+impl NetworkService {
     /// Starts a Libp2pService with a given config, UnboundedSender, and tokio executor.
     /// Returns an UnboundedSender channel so messages can come in.
     pub fn new(
@@ -63,7 +63,6 @@ impl NetworkService<'_> {
     ) -> (
         Self,
         mpsc::UnboundedSender<NetworkMessage>,
-        // tokio::sync::oneshot::Sender<u8>,
     ) {
         let (tx, rx) = mpsc::unbounded_channel();
 
