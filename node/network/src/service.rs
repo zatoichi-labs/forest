@@ -1,5 +1,6 @@
 use ferret_libp2p::config::Libp2pConfig;
 use ferret_libp2p::service::{Libp2pService, NetworkEvent};
+use ferret_node_services::service;
 use futures::stream::Stream;
 use futures::{Async, Future};
 use libp2p::gossipsub::Topic;
@@ -15,11 +16,43 @@ pub enum NetworkMessage {
 
 /// The NetworkService receives commands through a channel which communicates with Libp2p.
 /// It also listens to the Libp2p service for
-pub struct NetworkService {
+pub struct NetworkService<'T> {
+    logger: Logger,
+    exit_sender: tokio::sync::oneshot::Sender<u8>,
+    exit_receiver: tokio::sync::oneshot::Receiver<u8>,
+    executor: &'T TaskExecutor,
+    out_transmitter: mpsc::UnboundedSender<NetworkEvent>,
+    message_receiver: mpsc::UnboundedReceiver<NetworkMessage>,
     pub libp2p: Arc<Mutex<Libp2pService>>,
 }
 
-impl NetworkService {
+impl service::Service for NetworkService<'_> {
+    fn name() -> String {
+        "NetworkService".to_owned()
+    }
+
+    fn start(&self) -> Result<(), service::Error> {
+        start(
+            self.logger.clone(),
+            self.libp2p.clone(),
+            self.executor,
+            self.out_transmitter,
+            self.message_receiver,
+            self.exit_receiver,
+        );
+        Ok(())
+    }
+    // message_receiver: mpsc::UnboundedReceiver<NetworkMessage>,
+    // exit_rx: tokio::sync::oneshot::Receiver<u8>,
+
+    fn stop(&self) -> Result<(), service::Error> {
+        // TODO figure out proper number
+        self.exit_sender.send(1);
+        Ok(())
+    }
+}
+
+impl NetworkService<'_> {
     /// Starts a Libp2pService with a given config, UnboundedSender, and tokio executor.
     /// Returns an UnboundedSender channel so messages can come in.
     pub fn new(
@@ -30,26 +63,25 @@ impl NetworkService {
     ) -> (
         Self,
         mpsc::UnboundedSender<NetworkMessage>,
-        tokio::sync::oneshot::Sender<u8>,
+        // tokio::sync::oneshot::Sender<u8>,
     ) {
         let (tx, rx) = mpsc::unbounded_channel();
 
         let libp2p_service = Arc::new(Mutex::new(Libp2pService::new(log, config)));
 
-        let exit_tx = start(
-            log.clone(),
-            libp2p_service.clone(),
-            executor,
-            outbound_transmitter,
-            rx,
-        );
+        let (exit_tx, exit_rx) = tokio::sync::oneshot::channel();
 
         (
             NetworkService {
+                logger: *log,
                 libp2p: libp2p_service,
+                exit_sender: exit_tx,
+                exit_receiver: exit_rx,
+                executor: executor,
+                out_transmitter: outbound_transmitter,
+                message_receiver: rx,
             },
             tx,
-            exit_tx,
         )
     }
 }
@@ -63,15 +95,13 @@ fn start(
     executor: &TaskExecutor,
     outbound_transmitter: mpsc::UnboundedSender<NetworkEvent>,
     message_receiver: mpsc::UnboundedReceiver<NetworkMessage>,
-) -> tokio::sync::oneshot::Sender<u8> {
-    let (network_exit, exit_rx) = tokio::sync::oneshot::channel();
+    exit_rx: tokio::sync::oneshot::Receiver<u8>,
+) {
     executor.spawn(
         poll(log, libp2p_service, outbound_transmitter, message_receiver)
             .select(exit_rx.then(|_| Ok(())))
             .then(move |_| Ok(())),
     );
-
-    network_exit
 }
 
 fn poll(
