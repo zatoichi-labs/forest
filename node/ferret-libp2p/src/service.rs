@@ -14,6 +14,8 @@ type Libp2pBehaviour = MyBehaviour<Substream<StreamMuxerBox>>;
 /// The Libp2pService listens to events from the Libp2p swarm.
 pub struct Libp2pService {
     pub swarm: Swarm<Libp2pStream, Libp2pBehaviour>,
+    pub listening: bool,
+    log: Logger,
 }
 
 impl Libp2pService {
@@ -31,6 +33,7 @@ impl Libp2pService {
             Swarm::new(transport, be, local_peer_id)
         };
 
+        
         for node in config.bootstrap_peers.clone() {
             match node.parse() {
                 Ok(to_dial) => match Swarm::dial_addr(&mut swarm, to_dial) {
@@ -54,7 +57,8 @@ impl Libp2pService {
             swarm.subscribe(topic);
         }
 
-        Libp2pService { swarm }
+
+        Libp2pService { swarm , log: log.clone(), listening: false}
     }
 }
 
@@ -83,8 +87,15 @@ impl Stream for Libp2pService {
                         })));
                     }
                 },
-                Ok(Async::Ready(None)) => break,
-                Ok(Async::NotReady) => break,
+                Ok(Async::Ready(None)) | Ok(Async::NotReady) => {
+                    if !self.listening {
+                        if let Some(a) = Swarm::listeners(&self.swarm).next(){
+                            info!(self.log, "Listening on {:?}", a);
+                            self.listening = true;
+                        }
+                    }
+                    break;
+                },
                 _ => break,
             }
         }

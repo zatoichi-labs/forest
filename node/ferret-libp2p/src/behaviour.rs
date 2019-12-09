@@ -31,7 +31,21 @@ pub enum MyBehaviourEvent {
 impl<TSubstream: AsyncRead + AsyncWrite> NetworkBehaviourEventProcess<KademliaEvent>
     for MyBehaviour<TSubstream>
 {
-    fn inject_event(&mut self, event: KademliaEvent) {}
+    fn inject_event(&mut self, event: KademliaEvent) {
+        match event {
+            KademliaEvent::BootstrapResult(_) => (),
+            KademliaEvent::GetClosestPeersResult(_) => (),
+            KademliaEvent::GetProvidersResult(_) => (),
+            KademliaEvent::StartProvidingResult(_) => (),
+            KademliaEvent::RepublishProviderResult(_) => (),
+            KademliaEvent::GetRecordResult(_) => (),
+            KademliaEvent::PutRecordResult(_) => (),
+            KademliaEvent::RepublishRecordResult(_) => (),
+            KademliaEvent::Discovered { peer_id, addresses, ty } => (),
+            KademliaEvent::RoutingUpdated { peer, addresses, old_peer } => (),
+            KademliaEvent::UnroutablePeer { peer } => (),
+        }
+    }
 }
 
 impl<TSubstream: AsyncRead + AsyncWrite> NetworkBehaviourEventProcess<MdnsEvent>
