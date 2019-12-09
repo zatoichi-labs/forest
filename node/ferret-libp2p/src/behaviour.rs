@@ -2,6 +2,8 @@ use futures::Async;
 use libp2p::core::identity::Keypair;
 use libp2p::core::PeerId;
 use libp2p::gossipsub::{Gossipsub, GossipsubConfig, GossipsubEvent, Topic, TopicHash};
+use libp2p::kad::record::store::MemoryStore;
+use libp2p::kad::{Kademlia, KademliaConfig, KademliaEvent};
 use libp2p::mdns::{Mdns, MdnsEvent};
 use libp2p::swarm::{NetworkBehaviourAction, NetworkBehaviourEventProcess};
 use libp2p::tokio_io::{AsyncRead, AsyncWrite};
@@ -12,6 +14,7 @@ use libp2p::NetworkBehaviour;
 pub struct MyBehaviour<TSubstream: AsyncRead + AsyncWrite> {
     pub gossipsub: Gossipsub<TSubstream>,
     pub mdns: Mdns<TSubstream>,
+    pub kad: Kademlia<TSubstream, MemoryStore>,
     #[behaviour(ignore)]
     events: Vec<MyBehaviourEvent>,
 }
@@ -24,6 +27,11 @@ pub enum MyBehaviourEvent {
         topics: Vec<TopicHash>,
         message: Vec<u8>,
     },
+}
+impl<TSubstream: AsyncRead + AsyncWrite> NetworkBehaviourEventProcess<KademliaEvent>
+    for MyBehaviour<TSubstream>
+{
+    fn inject_event(&mut self, event: KademliaEvent) {}
 }
 
 impl<TSubstream: AsyncRead + AsyncWrite> NetworkBehaviourEventProcess<MdnsEvent>
@@ -77,9 +85,12 @@ impl<TSubstream: AsyncRead + AsyncWrite> MyBehaviour<TSubstream> {
     pub fn new(local_key: &Keypair) -> Self {
         let local_peer_id = local_key.public().into_peer_id();
         let gossipsub_config = GossipsubConfig::default();
+        let kademlia_config = KademliaConfig::default();
+        let store = MemoryStore::new(local_peer_id.clone());
         MyBehaviour {
-            gossipsub: Gossipsub::new(local_peer_id, gossipsub_config),
+            gossipsub: Gossipsub::new(local_peer_id.clone(), gossipsub_config),
             mdns: Mdns::new().expect("Failed to create mDNS service"),
+            kad: Kademlia::with_config(local_peer_id.clone(), store, kademlia_config),
             events: vec![],
         }
     }
