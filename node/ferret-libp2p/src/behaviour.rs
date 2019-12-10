@@ -5,9 +5,15 @@ use libp2p::gossipsub::{Gossipsub, GossipsubConfig, GossipsubEvent, Topic, Topic
 use libp2p::kad::record::store::MemoryStore;
 use libp2p::kad::{Kademlia, KademliaConfig, KademliaEvent};
 use libp2p::mdns::{Mdns, MdnsEvent};
+use libp2p::ping::{
+    handler::{PingFailure, PingSuccess},
+    Ping, PingEvent,
+};
 use libp2p::swarm::{NetworkBehaviourAction, NetworkBehaviourEventProcess};
 use libp2p::tokio_io::{AsyncRead, AsyncWrite};
 use libp2p::NetworkBehaviour;
+use slog::debug;
+use slog::Logger;
 
 #[derive(NetworkBehaviour)]
 #[behaviour(out_event = "MyBehaviourEvent", poll_method = "poll")]
@@ -15,8 +21,11 @@ pub struct MyBehaviour<TSubstream: AsyncRead + AsyncWrite> {
     pub gossipsub: Gossipsub<TSubstream>,
     pub mdns: Mdns<TSubstream>,
     pub kad: Kademlia<TSubstream, MemoryStore>,
+    pub ping: Ping<TSubstream>,
     #[behaviour(ignore)]
     events: Vec<MyBehaviourEvent>,
+    #[behaviour(ignore)]
+    log: Logger,
 }
 
 pub enum MyBehaviourEvent {
@@ -83,6 +92,49 @@ impl<TSubstream: AsyncRead + AsyncWrite> NetworkBehaviourEventProcess<GossipsubE
     }
 }
 
+impl<TSubstream: AsyncRead + AsyncWrite> NetworkBehaviourEventProcess<PingEvent>
+    for MyBehaviour<TSubstream>
+{
+    fn inject_event(&mut self, event: PingEvent) {
+        match event {
+            PingEvent {
+                peer,
+                result: Result::Ok(PingSuccess::Ping { rtt }),
+            } => {
+                debug!(
+                    self.log,
+                    "PingSuccess::Ping rtt to {} is {} ms",
+                    peer.to_base58(),
+                    rtt.as_millis()
+                );
+            }
+            PingEvent {
+                peer,
+                result: Result::Ok(PingSuccess::Pong),
+            } => {
+                debug!(self.log, "PingSuccess::Pong from {}", peer.to_base58());
+            }
+            PingEvent {
+                peer,
+                result: Result::Err(PingFailure::Timeout),
+            } => {
+                debug!(self.log, "PingFailure::Timeout {}", peer.to_base58());
+            }
+            PingEvent {
+                peer,
+                result: Result::Err(PingFailure::Other { error }),
+            } => {
+                debug!(
+                    self.log,
+                    "PingFailure::Other {}: {}",
+                    peer.to_base58(),
+                    error
+                );
+            }
+        }
+    }
+}
+
 impl<TSubstream: AsyncRead + AsyncWrite> MyBehaviour<TSubstream> {
     /// Consumes the events list when polled.
     fn poll<TBehaviourIn>(
@@ -96,7 +148,7 @@ impl<TSubstream: AsyncRead + AsyncWrite> MyBehaviour<TSubstream> {
 }
 
 impl<TSubstream: AsyncRead + AsyncWrite> MyBehaviour<TSubstream> {
-    pub fn new(local_key: &Keypair) -> Self {
+    pub fn new(local_key: &Keypair, log: Logger) -> Self {
         let local_peer_id = local_key.public().into_peer_id();
         let gossipsub_config = GossipsubConfig::default();
         let kademlia_config = KademliaConfig::default();
@@ -105,6 +157,8 @@ impl<TSubstream: AsyncRead + AsyncWrite> MyBehaviour<TSubstream> {
             gossipsub: Gossipsub::new(local_peer_id.clone(), gossipsub_config),
             mdns: Mdns::new().expect("Failed to create mDNS service"),
             kad: Kademlia::with_config(local_peer_id.clone(), store, kademlia_config),
+            ping: Ping::default(),
+            log,
             events: vec![],
         }
     }
