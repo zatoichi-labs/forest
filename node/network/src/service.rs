@@ -20,26 +20,49 @@ pub struct NetworkService {
     logger: Logger,
     exit_sender: tokio::sync::oneshot::Sender<u8>,
     exit_receiver: tokio::sync::oneshot::Receiver<u8>,
-    executor: TaskExecutor,
+    // executor: TaskExecutor,
     out_transmitter: mpsc::UnboundedSender<NetworkEvent>,
     message_receiver: mpsc::UnboundedReceiver<NetworkMessage>,
     net_sender: mpsc::UnboundedSender<NetworkMessage>,
     pub libp2p: Arc<Mutex<Libp2pService>>,
 }
 
-impl service::Service for NetworkService {
-    fn name() -> String {
-        "NetworkService".to_owned()
+impl NetworkService {
+    /// Starts a Libp2pService with a given config, UnboundedSender, and tokio executor.
+    /// Returns an UnboundedSender channel so messages can come in.
+    pub fn new(
+        config: &Libp2pConfig,
+        log: &Logger,
+        outbound_transmitter: mpsc::UnboundedSender<NetworkEvent>,
+    ) ->
+        Self
+    {
+        let (tx, rx) = mpsc::unbounded_channel();
+
+        let libp2p_service = Arc::new(Mutex::new(Libp2pService::new(log, config)));
+
+        let (exit_tx, exit_rx) = tokio::sync::oneshot::channel();
+
+        NetworkService {
+            logger: log.clone(),
+            libp2p: libp2p_service,
+            exit_sender: exit_tx,
+            exit_receiver: exit_rx,
+            // executor: executor,
+            out_transmitter: outbound_transmitter,
+            message_receiver: rx,
+            net_sender: tx,
+        }
     }
 
-    fn start(&self) -> Result<(), service::Error> {
-        start(
+    fn start(&self, executor: TaskExecutor) -> Result<(), service::Error> {
+        spawn(
             self.logger.clone(),
             self.libp2p.clone(),
-            &self.executor,
-            self.out_transmitter,
-            self.message_receiver,
-            self.exit_receiver,
+            &executor,
+            self.out_transmitter.clone(),
+            self.message_receiver.clone(),
+            self.exit_receiver.clone(),
         );
         Ok(())
     }
@@ -51,40 +74,12 @@ impl service::Service for NetworkService {
     }
 }
 
-impl NetworkService {
-    /// Starts a Libp2pService with a given config, UnboundedSender, and tokio executor.
-    /// Returns an UnboundedSender channel so messages can come in.
-    pub fn new(
-        config: &Libp2pConfig,
-        log: &Logger,
-        outbound_transmitter: mpsc::UnboundedSender<NetworkEvent>,
-        executor: &TaskExecutor,
-    ) ->
-        Self
-    {
-        let (tx, rx) = mpsc::unbounded_channel();
 
-        let libp2p_service = Arc::new(Mutex::new(Libp2pService::new(log, config)));
-
-        let (exit_tx, exit_rx) = tokio::sync::oneshot::channel();
-
-        NetworkService {
-            logger: *log,
-            libp2p: libp2p_service,
-            exit_sender: exit_tx,
-            exit_receiver: exit_rx,
-            executor: executor,
-            out_transmitter: outbound_transmitter,
-            message_receiver: rx,
-            net_sender: tx,
-        }
-    }
-}
 
 enum Error {}
 
 /// Spawns the NetworkService service.
-fn start(
+fn spawn(
     log: Logger,
     libp2p_service: Arc<Mutex<Libp2pService>>,
     executor: &TaskExecutor,

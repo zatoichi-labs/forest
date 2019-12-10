@@ -24,10 +24,10 @@ fn main() {
 
     // Create the default libp2p config
     // Start the NetworkService. Returns net_tx so  you can pass messages in.
-    let network_service = NetworkService::new(&config.network, &log, tx, &rt.executor());
+    let network_service = NetworkService::new(&config.network, &log, tx);
 
     // Start All Services
-    network_service.start();
+    network_service.start(&rt.executor());
     // Stop All Services
     // network_service.stop();
 
