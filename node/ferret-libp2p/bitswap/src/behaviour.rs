@@ -1,3 +1,5 @@
+use super::protocol::ProtocolConfig;
+
 use libp2p::core::ConnectedPoint;
 use libp2p::swarm::protocols_handler::{DummyProtocolsHandler, OneShotHandler, ProtocolsHandler};
 use libp2p::swarm::{NetworkBehaviour, NetworkBehaviourAction, PollParameters};
