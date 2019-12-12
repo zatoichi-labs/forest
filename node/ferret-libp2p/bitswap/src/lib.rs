@@ -1,5 +1,5 @@
-pub mod protocol;
 pub mod behaviour;
+pub mod protocol;
 
 #[cfg(test)]
 mod tests {
