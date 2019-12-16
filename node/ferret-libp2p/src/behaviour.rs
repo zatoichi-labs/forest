@@ -12,6 +12,7 @@ use libp2p::swarm::{NetworkBehaviourAction, NetworkBehaviourEventProcess};
 use libp2p::tokio_io::{AsyncRead, AsyncWrite};
 use libp2p::NetworkBehaviour;
 use slog::{debug, Logger};
+use crate::hello::behaviour::{Hello, HelloEvent};
 
 #[derive(NetworkBehaviour)]
 #[behaviour(out_event = "MyBehaviourEvent", poll_method = "poll")]
@@ -20,6 +21,7 @@ pub struct MyBehaviour<TSubstream: AsyncRead + AsyncWrite> {
     pub mdns: Mdns<TSubstream>,
     pub ping: Ping<TSubstream>,
     pub identify: Identify<TSubstream>,
+    pub hello: Hello<TSubstream>,
     #[behaviour(ignore)]
     events: Vec<MyBehaviourEvent>,
     #[behaviour(ignore)]
@@ -129,6 +131,22 @@ impl<TSubstream: AsyncRead + AsyncWrite> NetworkBehaviourEventProcess<IdentifyEv
     }
 }
 
+impl<TSubstream: AsyncRead + AsyncWrite> NetworkBehaviourEventProcess<HelloEvent>
+for MyBehaviour<TSubstream>
+{
+    fn inject_event(&mut self, event: HelloEvent) {
+        match event{
+            HelloEvent::ReceiveHello(a) => {
+                println!("behaviour receivehello: {:?}", a);
+            },
+            HelloEvent::SentHello =>    {
+                println!("behav sendhello");
+            }
+        }
+    }
+}
+
+
 impl<TSubstream: AsyncRead + AsyncWrite> MyBehaviour<TSubstream> {
     /// Consumes the events list when polled.
     fn poll<TBehaviourIn>(
@@ -141,6 +159,13 @@ impl<TSubstream: AsyncRead + AsyncWrite> MyBehaviour<TSubstream> {
     }
 }
 
+impl<TSubstream: AsyncRead + AsyncWrite>
+NetworkBehaviourEventProcess<()> for
+MyBehaviour<TSubstream>
+{
+    fn inject_event(&mut self, _event: ()) {}
+}
+
 impl<TSubstream: AsyncRead + AsyncWrite> MyBehaviour<TSubstream> {
     pub fn new(log: Logger, local_key: &Keypair) -> Self {
         let local_peer_id = local_key.public().into_peer_id();
@@ -150,6 +175,7 @@ impl<TSubstream: AsyncRead + AsyncWrite> MyBehaviour<TSubstream> {
             mdns: Mdns::new().expect("Failed to create mDNS service"),
             ping: Ping::default(),
             identify: Identify::new("ferret/libp2p".into(), "0.0.1".into(), local_key.public()),
+            hello: Hello::new(),
             log,
             events: vec![],
         }
