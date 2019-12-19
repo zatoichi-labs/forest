@@ -9,3 +9,7 @@ edition = "2018"
 [dependencies]
 libp2p =  { git = "https://github.com/SigP/rust-libp2p", rev = "3f9b030e29c9b31f9fe6f2ed27be4a813e2b3701" }
 tokio = "0.1.22"
+protobuf = "2.8.1"
+#cid = {path = "../../../../../multiformat/rust-cid"}
+cid = "*"
+multihash = {git = "https://github.com/multiformats/rust-multihash", rev = "7e93838c01aaf84d50e7c785a2603f90dff65c03"}

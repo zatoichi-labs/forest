@@ -12,7 +12,7 @@ use libp2p::swarm::{NetworkBehaviourAction, NetworkBehaviourEventProcess};
 use libp2p::tokio_io::{AsyncRead, AsyncWrite};
 use libp2p::NetworkBehaviour;
 use slog::{debug, Logger};
-
+use bitswap::behaviour::{BitSwap, BitSwapEvent};
 #[derive(NetworkBehaviour)]
 #[behaviour(out_event = "MyBehaviourEvent", poll_method = "poll")]
 pub struct MyBehaviour<TSubstream: AsyncRead + AsyncWrite> {
@@ -20,6 +20,7 @@ pub struct MyBehaviour<TSubstream: AsyncRead + AsyncWrite> {
     pub mdns: Mdns<TSubstream>,
     pub ping: Ping<TSubstream>,
     pub identify: Identify<TSubstream>,
+    pub bitswap: BitSwap<TSubstream>,
     #[behaviour(ignore)]
     events: Vec<MyBehaviourEvent>,
     #[behaviour(ignore)]
@@ -128,6 +129,25 @@ impl<TSubstream: AsyncRead + AsyncWrite> NetworkBehaviourEventProcess<IdentifyEv
         }
     }
 }
+impl<TSubstream: AsyncRead + AsyncWrite> NetworkBehaviourEventProcess<BitSwapEvent>
+for MyBehaviour<TSubstream>
+{
+    fn inject_event(&mut self, event: BitSwapEvent) {
+        match event {
+            BitSwapEvent::Rx(msg) => {
+                println!("RX! : {:?}", msg)
+            },
+            BitSwapEvent::Tx =>{
+                println!("TX!")
+            }
+        }
+    }
+}
+impl <TSubstream: AsyncRead + AsyncWrite> NetworkBehaviourEventProcess<()>
+for MyBehaviour<TSubstream>
+{
+    fn inject_event(&mut self, event: ()){}
+}
 
 impl<TSubstream: AsyncRead + AsyncWrite> MyBehaviour<TSubstream> {
     /// Consumes the events list when polled.
@@ -150,6 +170,7 @@ impl<TSubstream: AsyncRead + AsyncWrite> MyBehaviour<TSubstream> {
             mdns: Mdns::new().expect("Failed to create mDNS service"),
             ping: Ping::default(),
             identify: Identify::new("ferret/libp2p".into(), "0.0.1".into(), local_key.public()),
+            bitswap: BitSwap::new(),
             log,
             events: vec![],
         }

@@ -1,5 +1,6 @@
 pub mod behaviour;
 pub mod protocol;
+pub mod bitswap;
 
 #[cfg(test)]
 mod tests {
