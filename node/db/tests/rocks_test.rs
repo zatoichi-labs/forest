@@ -1,6 +1,6 @@
 mod db_utils;
 
-use db::{rocks::RocksDb, DatabaseService, Read, Write};
+use db::{rocks::RocksDb, Database};
 use db_utils::DBPath;
 
 #[test]
