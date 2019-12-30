@@ -36,9 +36,9 @@ impl<TSubstream> BitSwap<TSubstream> {
         let mut wantlist = Message_Wantlist::new();
         let mut wantlist_entry = Message_Wantlist_Entry::new();
         let mut block_1 = Message_Block::new();
-        let hash = "bafy2bzaceaxxuwhafbawu73j4byhp7h5lrblgdhoja2eiljpweujoj5lwf5cc".as_bytes();
+//        let hash = "bafy2bzaceaxxuwhafbawu73j4byhp7h5lrblgdhoja2eiljpweujoj5lwf5cc".as_bytes();
 //        println!("DECODED: {:?}", multihash::Multihash::from_bytes(hash.to_vec()));
-        let genesisCid = cid::Cid::new(cid::Codec::DagCBOR, cid::Version::V1, "bafy2bzaceaxxuwhafbawu73j4byhp7h5lrblgdhoja2eiljpweujoj5lwf5cc".as_bytes());
+//        let genesisCid = cid::Cid::new(cid::Codec::DagCBOR, cid::Version::V1, "bafy2bzaceaxxuwhafbawu73j4byhp7h5lrblgdhoja2eiljpweujoj5lwf5cc".as_bytes());
 //        let genesisCid = cid::Cid::from(hash).unwrap();
 //        println!("GENESIS CID {:?}", genesisCid);
         let genesisCidBytes:[u8; 38]  = [
@@ -136,16 +136,7 @@ where
         >,
     > {
         if let Some(event) = self.events.pop_front() {
-//            if let NetworkBehaviourAction::SendEvent { peer_id, event } = event {
-//                    return Async::Ready(NetworkBehaviourAction::SendEvent {
-//                        peer_id,
-//                        event,
-//                    });
-//            } else {
-            println!("Sendin");
-
             return Async::Ready(event);
-//            }
         }
         Async::NotReady
     }
