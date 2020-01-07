@@ -20,8 +20,7 @@ impl UpgradeInfo for BitSwapConfig {
     type InfoIter = iter::Once<Self::Info>;
 
     fn protocol_info(&self) -> Self::InfoIter {
-        // b"/ipfs/bitswap", b"/ipfs/bitswap/1.0.0"
-        iter::once(b"/ipfs/bitswap/1.1.0")
+        iter::once(b"/chain/ipfs/bitswap/1.1.0")
     }
 }
 
@@ -38,7 +37,7 @@ impl<C> InboundUpgrade<C> for BitSwapConfig
         println!("upgrade_inbound: {}", std::str::from_utf8(&info).unwrap());
         upgrade::read_one_then(socket, 524288, (), |packet, ()| {
             let message: Message = protobuf::parse_from_bytes(packet.as_ref()).unwrap();
-            println!("inbound message: {:?}", message);
+            println!("inbound message: {:?}", message.payload[0].data);
             Ok(message)
         })
     }
@@ -49,8 +48,7 @@ impl UpgradeInfo for Message {
     type InfoIter = iter::Once<Self::Info>;
 
     fn protocol_info(&self) -> Self::InfoIter {
-        // b"/ipfs/bitswap", b"/ipfs/bitswap/1.0.0"
-        iter::once(b"/ipfs/bitswap/1.1.0")
+        iter::once(b"/chain/ipfs/bitswap/1.1.0")
     }
 }
 

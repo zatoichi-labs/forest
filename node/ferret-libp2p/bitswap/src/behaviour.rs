@@ -42,11 +42,11 @@ impl<TSubstream> BitSwap<TSubstream> {
 //        let genesisCid = cid::Cid::from(hash).unwrap();
 //        println!("GENESIS CID {:?}", genesisCid);
         let genesisCidBytes:[u8; 38]  = [
-            1, 113, 160, 228,   2,  32,  47, 122,  88,
-            224,  40,  65, 106, 127, 105, 224, 112, 119,
-            252, 253,  92,  66, 179,  12, 238,  72,  52,
-            68,  45,  47, 177,  40, 151,  39, 171, 177,
-            122,  33
+            1, 113, 160, 228,   2,  32,  16,  36,
+            28,  34,  16, 116,  33,  19,  83,  80,
+            11, 235,  58, 157, 105, 192, 220, 120,
+            106, 100, 154, 202,  64, 115, 103, 162,
+            192, 209, 104, 158, 130, 221
         ];
         wantlist_entry.set_block(genesisCidBytes.to_vec());
         wantlist_entry.set_priority(1);
