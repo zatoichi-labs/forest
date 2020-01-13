@@ -13,5 +13,5 @@ cid = "*"
 serde_cbor = {git = "https://github.com/rklaehn/cbor", rev = "2f2d0253e2d30e5ba7812cf0b149838b0c95530d"}
 serde_derive = { version = "1.0.14", default-features = false }
 serde = { version = "1.0.14", default-features = false }
-
+bytes = "0.4.12"
 #multihash = {git = "https://github.com/multiformats/rust-multihash", rev = "7e93838c01aaf84d50e7c785a2603f90dff65c03"}

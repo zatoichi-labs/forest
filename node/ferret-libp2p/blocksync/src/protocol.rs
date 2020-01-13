@@ -10,6 +10,8 @@ use tokio::codec::{Framed, Decoder};
 use tokio::codec::BytesCodec;
 use tokio::prelude::future::AndThen;
 
+use bytes::BufMut;
+
 //#[derive(Clone, Debug, Serialize, Deserialize)]
 #[derive(Clone, Debug)]
 pub struct Message{
@@ -84,20 +86,22 @@ impl<C> OutboundUpgrade<C> for Message
     type Output = ();
 //    type Error = Infallible;
     type Error = io::Error;
-//    type Future = future::FutureResult<Self::Output, Self::Error>;
-    type Future = upgrade::WriteOne<Negotiated<C>>;
+    type Future = future::FutureResult<Self::Output, Self::Error>;
+//    type Future = upgrade::WriteOne<Negotiated<C>>;
 
     #[inline]
-    fn upgrade_outbound(self, socket: Negotiated<C>, info: Self::Info) -> Self::Future {
+    fn upgrade_outbound(self, mut socket: Negotiated<C>, info: Self::Info) -> Self::Future {
         let x: PhantomData<C> = PhantomData;
         println!("upgrade_outbound: {}", std::str::from_utf8(info).unwrap());
-//        let bytes = self.write_to_bytes().unwrap();
-        let codec = BytesCodec::new();
         let bytes : Vec<u8> = vec![0x83, 0x81, 0xd8, 0x2a, 0x58, 0x27, 0x0, 0x1, 0x71, 0xa0, 0xe4, 0x2, 0x20, 0x2f, 0x7a, 0x58, 0xe0, 0x28, 0x41, 0x6a, 0x7f, 0x69, 0xe0, 0x70, 0x77, 0xfc, 0xfd, 0x5c, 0x42, 0xb3, 0xc, 0xee, 0x48, 0x34, 0x44, 0x2d, 0x2f, 0xb1, 0x28, 0x97, 0x27, 0xab, 0xb1, 0x7a, 0x21, 0x3, 0x0];
         println!("upgrade_outbound in bytes: {:?}", bytes);
-//        future::ok(codec.framed(socket))
-//       upgrade::write_one(socket, bytes)
-
-//        socket.write(bytes.as_bytes());
+        println!("Wrote this number of bytes on blocksync: {:?}", socket.write(&bytes).unwrap());
+        socket.flush().unwrap();
+        let mut buf= vec![];
+        socket.read_buf(&mut buf).and_then(move |size| {
+            println!("Read this: {:?}", buf);
+            Ok(())
+        });
+        future::ok(())
     }
 }
