@@ -7,14 +7,37 @@
 use super::{BlockHeader, Error, Ticket};
 use cid::Cid;
 use clock::ChainEpoch;
+use encoding::{
+    de::{self, Deserializer},
+    ser::{self, Serializer},
+};
 use serde::{Deserialize, Serialize};
 
 /// A set of CIDs forming a unique key for a TipSet.
 /// Equal keys will have equivalent iteration order, but note that the CIDs are *not* maintained in
 /// the same order as the canonical iteration order of blocks in a tipset (which is by ticket)
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Default)]
 pub struct TipSetKeys {
     pub cids: Vec<Cid>,
+}
+impl ser::Serialize for TipSetKeys {
+    fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
+    where
+        S: Serializer,
+    {
+        let value = self.cids.clone();
+        value.serialize(serializer)
+    }
+}
+
+impl<'de> de::Deserialize<'de> for TipSetKeys {
+    fn deserialize<D>(deserializer: D) -> Result<Self, <D as Deserializer<'de>>::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let cids: Vec<Cid> = Deserialize::deserialize(deserializer)?;
+        Ok(TipSetKeys { cids })
+    }
 }
 
 // TODO verify format or implement custom serialize/deserialize function (if necessary):
