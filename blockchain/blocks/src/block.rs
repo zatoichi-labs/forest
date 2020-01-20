@@ -5,7 +5,11 @@
 
 use super::BlockHeader;
 use cid::Cid;
-use encoding::Cbor;
+use encoding::{
+    de::{self, Deserializer},
+    ser::{self, Serializer},
+    Cbor,
+};
 use message::{SignedMessage, UnsignedMessage};
 use multihash::Hash;
 use serde::{Deserialize, Serialize};

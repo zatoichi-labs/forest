@@ -55,8 +55,13 @@ pub struct BlockHeader {
 
     /// epoch is the period in which a new block is generated.
     /// There may be multiple rounds in an epoch
+    /// TODO: Investigate this... Epoch is in the spec, but in Lotus, its u64 height
     #[builder(default)]
     epoch: ChainEpoch,
+
+    #[builder(default)]
+    height: u64,
+
     // MINER INFO
     /// miner_address is the address of the miner actor that mined this block
     #[builder(default)]
@@ -191,6 +196,9 @@ impl BlockHeader {
     pub fn signature(&self) -> &Signature {
         &self.signature
     }
+    pub fn height(&self) -> u64 {
+        self.height
+    }
     /// Updates cache and returns mutable reference of header back
     fn update_cache(&mut self) -> Result<(), String> {
         self.cached_bytes = self.marshal_cbor().map_err(|e| e.to_string())?;
@@ -220,7 +228,8 @@ pub struct CborBlockHeader(
     EPostProof, // epost_verify
     TipSetKeys, // parents []cid
     u64,        // weight
-    ChainEpoch, // epoch // height
+    u64,        // height
+//    ChainEpoch, // epoch
     Cid,        // state_root
     Cid,        // message_receipts
     Cid,     // messages
@@ -241,7 +250,7 @@ impl ser::Serialize for BlockHeader {
             self.epost_verify.clone(),
             self.parents.clone(),
             self.weight,
-            self.epoch,
+            self.height,
             self.state_root.clone(),
             self.message_receipts.clone(),
             self.messages.clone(),
@@ -261,7 +270,8 @@ impl<'de> de::Deserialize<'de> for BlockHeader {
         Ok(Self{
             parents: cm.3,
             weight: cm.4,
-            epoch: cm.5,
+            epoch: Default::default(),
+            height: cm.5,
             miner_address: cm.0,
             messages: cm.8,
             message_receipts: cm.7,
