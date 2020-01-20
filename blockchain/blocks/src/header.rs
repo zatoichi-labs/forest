@@ -7,7 +7,11 @@ use cid::Cid;
 use clock::ChainEpoch;
 use crypto::Signature;
 use derive_builder::Builder;
-use encoding::{Cbor, Error as EncodingError};
+use encoding::{
+    de::{self, Deserializer},
+    ser::{self, Serializer},
+    Cbor, Error as EncodingError,
+};
 use multihash::Hash;
 use serde::{Deserialize, Serialize};
 
@@ -35,7 +39,7 @@ use serde::{Deserialize, Serialize};
 ///     .build_and_validate()
 ///     .unwrap();
 /// ```
-#[derive(Clone, Debug, PartialEq, Builder, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Builder)]
 #[builder(name = "BlockHeaderBuilder")]
 pub struct BlockHeader {
     // CHAIN LINKING
@@ -61,7 +65,7 @@ pub struct BlockHeader {
     // STATE
     /// messages contains the merkle links for bls_messages and secp_messages
     #[builder(default)]
-    messages: TxMeta,
+    messages: Cid,
 
     /// message_receipts is the Cid of the root of an array of MessageReceipts
     #[builder(default)]
@@ -94,12 +98,12 @@ pub struct BlockHeader {
     bls_aggregate: Signature,
     // CACHE
     /// stores the cid for the block after the first call to `cid()`
-    #[serde(skip_serializing)]
+    /// Does not get serialized
     #[builder(default)]
     cached_cid: Cid,
 
     /// stores the hashed bytes of the block after the fist call to `cid()`
-    #[serde(skip_serializing)]
+    /// Does not get serialized
     #[builder(default)]
     cached_bytes: Vec<u8>,
 }
@@ -147,7 +151,7 @@ impl BlockHeader {
         &self.miner_address
     }
     /// Getter for BlockHeader messages
-    pub fn messages(&self) -> &TxMeta {
+    pub fn messages(&self) -> &Cid {
         &self.messages
     }
     /// Getter for BlockHeader message_receipts
@@ -206,5 +210,70 @@ impl BlockHeaderBuilder {
         header.update_cache()?;
 
         Ok(header)
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct CborBlockHeader(
+    Address,    // miner_address
+    Ticket,     // ticket
+    EPostProof, // epost_verify
+    TipSetKeys, // parents []cid
+    u64,        // weight
+    ChainEpoch, // epoch // height
+    Cid,        // state_root
+    Cid,        // message_receipts
+    Cid,     // messages
+    Signature,  // bls_aggregate
+    u64,        // timestamp
+    Signature,  // signature
+    u64,        // fork_signal
+);
+
+impl ser::Serialize for BlockHeader {
+    fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
+    where
+        S: Serializer,
+    {
+        let value: CborBlockHeader = CborBlockHeader(
+            self.miner_address.clone(),
+            self.ticket.clone(),
+            self.epost_verify.clone(),
+            self.parents.clone(),
+            self.weight,
+            self.epoch,
+            self.state_root.clone(),
+            self.message_receipts.clone(),
+            self.messages.clone(),
+            self.bls_aggregate.clone(),
+            self.timestamp,
+            self.signature.clone(),
+            self.fork_signal,
+        );
+        CborBlockHeader::serialize(&value, serializer)
+    }
+}
+
+impl<'de> de::Deserialize<'de> for BlockHeader {
+    fn deserialize<D>(deserializer: D) -> Result<Self, <D as Deserializer<'de>>::Error> where
+        D: Deserializer<'de> {
+        let cm = CborBlockHeader::deserialize(deserializer)?;
+        Ok(Self{
+            parents: cm.3,
+            weight: cm.4,
+            epoch: cm.5,
+            miner_address: cm.0,
+            messages: cm.8,
+            message_receipts: cm.7,
+            state_root: cm.6,
+            fork_signal: cm.12,
+            signature: cm.11,
+            epost_verify: cm.2,
+            timestamp: cm.10,
+            ticket: cm.1,
+            bls_aggregate: cm.9,
+            cached_cid: Default::default(),
+            cached_bytes: vec![]
+        })
     }
 }
