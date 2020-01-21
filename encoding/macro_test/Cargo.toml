@@ -1,0 +1,9 @@
+[package]
+name = "macro_test"
+version = "0.1.0"
+authors = ["austinabell <austinabell8@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+tuple_serialize = { path = "../tuple_serialize" }
+serde = { version = "1.0", features = ["derive"] }

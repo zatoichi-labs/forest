@@ -17,6 +17,7 @@ path = "tests/runner.rs"
 trybuild = "1.0"
 
 [dependencies]
+serde = { version = "1.0", features = ["derive"] }
 syn = { version = "1.0", features = ["extra-traits"] }
 quote = "1.0"
 proc-macro2 = "1.0"

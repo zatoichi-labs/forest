@@ -19,4 +19,6 @@ members = [
     "ipld/cid",
     "ipld",
     "encoding/tuple_serialize",
+    # TODO remove macro test crate
+    "encoding/macro_test",
 ]

@@ -7,7 +7,9 @@ use serde;
 #[derive(TupleSerialize)]
 pub struct Serialize {
     field1: String,
+    #[tuple_order(1)]
     field2: u8,
+    #[tuple_order(2)]
     field3: (u8, String),
 }
 
