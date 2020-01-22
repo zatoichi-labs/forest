@@ -5,6 +5,8 @@ use crate::signature::{self, verify_bls_sig, BLS_SIG_LEN};
 use bls_signatures::{Serialize as BlsSerialize, Signature};
 use serde::{Deserialize, Serialize};
 
+use encoding::{ser, de, serde_bytes};
+
 pub struct VRFPublicKey(Vec<u8>);
 
 /// Contains some public key type to be used for VRF verification
@@ -16,7 +18,30 @@ impl VRFPublicKey {
 
 /// The output from running a VRF
 #[derive(Clone, Debug, PartialEq, Eq, Ord, PartialOrd, Default, Serialize, Deserialize)]
-pub struct VRFResult(Vec<u8>);
+pub struct VRFResult(
+    #[serde(with = "serde_bytes")]
+    Vec<u8>
+);
+
+//impl ser::Serialize for VRFResult {
+//    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+//        where
+//            S: ser::Serializer,
+//    {
+//        let value = serde_bytes::Bytes::new(&self.0);
+//        serde_bytes::Serialize::serialize(&value, serializer)
+//    }
+//}
+//
+//impl<'de> de::Deserialize<'de> for VRFResult {
+//    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+//        where
+//            D: de::Deserializer<'de>,
+//    {
+//        let bz: Vec<u8> = serde_bytes::Deserialize::deserialize(deserializer)?;
+//        Ok(VRFResult(bz))
+//    }
+//}
 
 // TODO verify format or implement custom serialize/deserialize function (if necessary):
 // https://github.com/ChainSafe/ferret/issues/143

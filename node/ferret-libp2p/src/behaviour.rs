@@ -1,6 +1,7 @@
 // Copyright 2020 ChainSafe Systems
 // SPDX-License-Identifier: Apache-2.0
 
+use blocksync::behaviour::{BlockSync, BlockSyncEvent};
 use futures::Async;
 use libp2p::core::identity::Keypair;
 use libp2p::core::PeerId;
@@ -11,7 +12,6 @@ use libp2p::ping::{
     handler::{PingFailure, PingSuccess},
     Ping, PingEvent,
 };
-use blocksync::behaviour::{BlockSync, BlockSyncEvent};
 use libp2p::swarm::{NetworkBehaviourAction, NetworkBehaviourEventProcess};
 use libp2p::tokio_io::{AsyncRead, AsyncWrite};
 use libp2p::NetworkBehaviour;
@@ -66,7 +66,7 @@ impl<TSubstream: AsyncRead + AsyncWrite> NetworkBehaviourEventProcess<GossipsubE
     for MyBehaviour<TSubstream>
 {
     fn inject_event(&mut self, message: GossipsubEvent) {
-        if let GossipsubEvent::Message(_, _, message) = message {
+        if let GossipsubEvent::Message(_, message) = message {
             self.events.push(MyBehaviourEvent::GossipMessage {
                 source: message.source,
                 topics: message.topics,
@@ -135,24 +135,20 @@ impl<TSubstream: AsyncRead + AsyncWrite> NetworkBehaviourEventProcess<IdentifyEv
 }
 
 impl<TSubstream: AsyncRead + AsyncWrite> NetworkBehaviourEventProcess<BlockSyncEvent>
-for MyBehaviour<TSubstream>
+    for MyBehaviour<TSubstream>
 {
     fn inject_event(&mut self, event: BlockSyncEvent) {
         match event {
-            BlockSyncEvent::Rx(msg) => {
-                println!("RX! : {:?}", msg)
-            },
-            BlockSyncEvent::Tx =>{
-                println!("TX!")
-            }
+            BlockSyncEvent::Rx(msg) => println!("RX! : {:?}", msg),
+            BlockSyncEvent::Tx => println!("TX!"),
         }
     }
 }
 
-impl <TSubstream: AsyncRead + AsyncWrite> NetworkBehaviourEventProcess<()>
-for MyBehaviour<TSubstream>
+impl<TSubstream: AsyncRead + AsyncWrite> NetworkBehaviourEventProcess<()>
+    for MyBehaviour<TSubstream>
 {
-    fn inject_event(&mut self, event: ()){}
+    fn inject_event(&mut self, event: ()) {}
 }
 
 impl<TSubstream: AsyncRead + AsyncWrite> MyBehaviour<TSubstream> {

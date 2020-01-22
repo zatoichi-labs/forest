@@ -9,9 +9,11 @@ edition = "2018"
 [dependencies]
 libp2p =  { git = "https://github.com/SigP/rust-libp2p", rev = "3f9b030e29c9b31f9fe6f2ed27be4a813e2b3701" }
 tokio = "0.1.22"
-cid = "*"
-serde_cbor = {git = "https://github.com/rklaehn/cbor", rev = "2f2d0253e2d30e5ba7812cf0b149838b0c95530d"}
-serde_derive = { version = "1.0.14", default-features = false }
-serde = { version = "1.0.14", default-features = false }
+
+encoding = {path = "../../../encoding"}
+serde = { version = "1.0", features = ["derive"] }
 bytes = "0.4.12"
-#multihash = {git = "https://github.com/multiformats/rust-multihash", rev = "7e93838c01aaf84d50e7c785a2603f90dff65c03"}
+futures = "0.1.29"
+ferret_cid = { path = "../../../ipld/cid" }
+blocks = { path = "../../../blockchain/blocks" }
+message = { path = "../../../vm/message" }

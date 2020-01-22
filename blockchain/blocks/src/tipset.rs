@@ -11,7 +11,8 @@ use encoding::{
     de::{self, Deserializer},
     ser::{self, Serializer},
 };
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize};
+use num_bigint::BigUint;
 
 /// A set of CIDs forming a unique key for a TipSet.
 /// Equal keys will have equivalent iteration order, but note that the CIDs are *not* maintained in
@@ -182,7 +183,7 @@ impl Tipset {
         &self.blocks[0].parents()
     }
     /// Returns the tipset's calculated weight
-    pub fn weight(&self) -> u64 {
+    pub fn weight(&self) -> &BigUint{
         self.blocks[0].weight()
     }
     /// Returns the tipset's epoch
@@ -198,7 +199,7 @@ mod tests {
     use cid::Cid;
     use crypto::VRFResult;
 
-    const WEIGHT: u64 = 1;
+    const WEIGHT: u8 = 1;
     const CACHED_BYTES: [u8; 1] = [0];
 
     fn template_key(data: &[u8]) -> Cid {
@@ -227,7 +228,7 @@ mod tests {
             .ticket(Ticket {
                 vrfproof: VRFResult::new(ticket_p),
             })
-            .weight(WEIGHT)
+            .weight(BigUint::from(WEIGHT))
             .cached_cid(cid)
             .build()
             .unwrap();
@@ -301,7 +302,7 @@ mod tests {
     #[test]
     fn weight_test() {
         let tipset = setup();
-        assert_eq!(tipset.weight(), WEIGHT);
+        assert_eq!(tipset.weight(), &BigUint::from(WEIGHT));
     }
 
     #[test]
