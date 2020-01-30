@@ -12,7 +12,7 @@ use num_bigint::BigUint;
 use raw_block::RawBlock;
 use serde::{Deserialize, Serialize};
 use std::fmt;
-use std::time::{SystemTime, UNIX_EPOCH};
+
 
 /// Header of a block
 ///
@@ -199,71 +199,5 @@ impl BlockHeader {
 impl fmt::Display for BlockHeader {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "BlockHeader: {:?}", self.cid())
-    }
-}
-
-impl BlockHeaderBuilder {
-
-    pub fn validate(&self) -> Result<BlockHeader, String> {
-        // Convert header builder into header struct
-        let mut header = self.build()?;
-        let _block_weight = header.weight() ;
-
-        // TODO must include a well-formed miner address
-        // Assumed to be true, add to method comment
-
-        // TODO must include at least one well-formed ticket, and if more they form a valid ticket chain -- is ticket thesame as message reciept?
-            //Need a public key to validate. Public key is not given in block
-
-        // TODO must include an election proof which is a valid signature by the miner address of the final ticket -- not sure
-
-        // TODO must include at least one parent CID
-        let parents = header.parents();
-        let num_parents = parents.cids.len();
-        if num_parents < 1 {
-            return Err("No parents in tipset".to_string());
-        }
-
-        // TODO must include a positive parent weight  -- Variable type is BigUint this condition is implicilty met
-        // TODO must include a positive height
-        // TODO must include well-formed state root, messages, and receipts CIDs
-
-
-
-        // must include a timestamp not in the future
-        // Get current system timestampand compare to header timestamp
-         let time_now =  match SystemTime::now().duration_since(UNIX_EPOCH) {
-             Ok(n) =>  n.as_secs(),
-             Err(_) => return Err("SystemTime before UNIX EPOCH!".to_string()),
-         };
-
-         if time_now < header.timestamp() {
-             return Err("Timestamp from future".to_string());
-         }
-
-         // TODO : Block Delay is a default constant set in this doc https://github.com/filecoin-project/specs/blob/6ab401c0b92efb6420c6e198ec387cf56dc86057/validation.md
-         // It is not mentioned how Block Delay can be changed so assume default value for now
-         let block_delay = 30;
-         //  Total Block delay is defined as 30s * length of blk.tickets
-         // TODO : Check how to find the number of tickets for a block. And then fix the total block delay
-         // TODO: Find the earliest parent block time
-         let num_tickets = 1;
-         let total_block_delay = block_delay * num_tickets;
-
-         // TDOO this is currently a false time
-         let earliest_parent_time = 0;
-         if earliest_parent_time + total_block_delay > header.timestamp() {
-             return Err("Timestamp from the future".to_string());
-         }
-
-
-
-
-
-
-
-        header.update_cache()?;
-
-        Ok(header)
     }
 }

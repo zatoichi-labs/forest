@@ -23,6 +23,8 @@ pub enum Error {
     Store(String),
     /// Error originating from key-value store
     KeyValueStore(String),
+    /// Error in validating arbitrary data
+    Validation(String),
 }
 
 impl fmt::Display for Error {
@@ -41,6 +43,7 @@ impl fmt::Display for Error {
             Error::Encoding(msg) => write!(f, "Error originating from Encoding type: {}", msg),
             Error::InvalidCid(msg) => write!(f, "Error originating from CID construction: {}", msg),
             Error::Store(msg) => write!(f, "Error originating from ChainStore: {}", msg),
+            Error::Validation(msg) => write!(f, "Error validating data: {}", msg),
         }
     }
 }

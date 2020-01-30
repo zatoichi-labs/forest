@@ -154,7 +154,7 @@ impl Tipset {
         Ok(self.blocks[0].ticket().clone())
     }
     /// Returns the smallest timestamp of all blocks in the tipset
-    fn min_timestamp(&self) -> Result<u64, Error> {
+    pub fn min_timestamp(&self) -> Result<u64, Error> {
         if self.blocks.is_empty() {
             return Err(Error::NoBlocks);
         }

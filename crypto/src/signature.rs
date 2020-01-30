@@ -94,6 +94,10 @@ impl Signature {
             bytes,
         }
     }
+    /// Returns Signature bytes
+    pub fn bytes(&self) -> &Vec<u8> {
+        &self.bytes
+    }
 }
 
 /// Checks if a signature is valid given data and address
