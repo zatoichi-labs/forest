@@ -26,6 +26,9 @@ impl Ticket {
     pub fn new(vrfproof: VRFResult) -> Self {
         Self { vrfproof }
     }
+
+    // TODO: Implement validate_from_parent(ticket)
+
 }
 
 impl ser::Serialize for Ticket {
