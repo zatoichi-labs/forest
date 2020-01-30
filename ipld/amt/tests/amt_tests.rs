@@ -4,15 +4,15 @@
 use encoding::{ser::Serialize, to_vec};
 use ipld_amt::*;
 
-fn assert_get<S, DB>(a: &mut AMT<DB>, i: u64, v: &S)
+fn assert_get<V, DB>(a: &mut AMT<DB, V>, i: u64, v: V)
 where
-    S: Serialize,
+    V: Serialize,
     DB: BlockStore,
 {
     assert_eq!(a.get_bytes(i).unwrap().unwrap(), to_vec(&v).unwrap());
 }
 
-fn assert_count<DB>(a: &mut AMT<DB>, c: u64)
+fn assert_count<DB, V>(a: &mut AMT<DB, V>, c: u64)
 where
     DB: BlockStore,
 {
@@ -21,7 +21,7 @@ where
 
 #[test]
 fn constructor() {
-    AMT::new(&db::MemoryDB::default());
+    AMT::<_, u8>::new(&db::MemoryDB::default());
 }
 
 #[test]
@@ -130,7 +130,7 @@ fn delete() {
 
     // Flush and regenerate amt
     let c = a.flush().unwrap();
-    let regen_amt = AMT::load(&db, &c).unwrap();
+    let regen_amt: AMT<_, &str> = AMT::load(&db, &c).unwrap();
     assert_eq!(regen_amt.count(), 1);
 
     // Test that a new amt inserting just at index 24 is the same
@@ -156,7 +156,7 @@ fn delete_first_entry() {
 
     // Flush and regenerate amt
     let c = a.flush().unwrap();
-    let new_amt = AMT::load(&db, &c).unwrap();
+    let new_amt: AMT<_, &str> = AMT::load(&db, &c).unwrap();
     assert_eq!(new_amt.count(), 1);
     assert_eq!(new_amt.height(), 0);
 }
@@ -173,7 +173,7 @@ fn delete_reduce_height() {
     assert_eq!(a.height(), 1);
     let c2 = a.flush().unwrap();
 
-    let mut a2 = AMT::load(&db, &c2).unwrap();
+    let mut a2: AMT<_, &str> = AMT::load(&db, &c2).unwrap();
     a2.delete(37).unwrap();
     assert_eq!(a2.count(), 1);
     assert_eq!(a2.height(), 0);
