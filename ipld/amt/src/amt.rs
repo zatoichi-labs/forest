@@ -111,7 +111,7 @@ where
     }
 
     /// Set value at index
-    pub fn set(&mut self, i: u64, val: V) -> Result<(), Error>
+    pub fn set(&mut self, i: u64, val: &V) -> Result<(), Error>
     where
         V: Serialize,
     {
@@ -119,7 +119,7 @@ where
             return Err(Error::OutOfRange(i));
         }
 
-        let bz = to_vec(&val)?;
+        let bz = to_vec(val)?;
 
         while i >= nodes_for_height(self.height() + 1 as u32) {
             // node at index exists
@@ -167,7 +167,7 @@ where
         V: Serialize + Clone,
     {
         for (i, val) in vals.iter().enumerate() {
-            self.set(i as u64, (*val).clone())?;
+            self.set(i as u64, val)?;
         }
 
         Ok(())
