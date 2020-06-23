@@ -1,0 +1,4 @@
+(function() {var implementors = {};
+implementors["forest_libp2p"] = [{"text":"impl Decoder for <a class=\"struct\" href=\"forest_libp2p/rpc/struct.InboundCodec.html\" title=\"struct forest_libp2p::rpc::InboundCodec\">InboundCodec</a>","synthetic":false,"types":["forest_libp2p::rpc::codec::InboundCodec"]},{"text":"impl Decoder for <a class=\"struct\" href=\"forest_libp2p/rpc/struct.OutboundCodec.html\" title=\"struct forest_libp2p::rpc::OutboundCodec\">OutboundCodec</a>","synthetic":false,"types":["forest_libp2p::rpc::codec::OutboundCodec"]}];
+implementors["graphsync"] = [{"text":"impl Decoder for <a class=\"struct\" href=\"graphsync/libp2p/struct.GraphSyncCodec.html\" title=\"struct graphsync::libp2p::GraphSyncCodec\">GraphSyncCodec</a>","synthetic":false,"types":["graphsync::libp2p::codec::GraphSyncCodec"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

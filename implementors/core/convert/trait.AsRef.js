@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["bitfield"] = [{"text":"impl <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/convert/trait.AsRef.html\" title=\"trait core::convert::AsRef\">AsRef</a>&lt;<a class=\"enum\" href=\"bitfield/enum.BitField.html\" title=\"enum bitfield::BitField\">BitField</a>&gt; for <a class=\"enum\" href=\"bitfield/enum.BitField.html\" title=\"enum bitfield::BitField\">BitField</a>","synthetic":false,"types":["bitfield::BitField"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

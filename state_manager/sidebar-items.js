@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["Error","State manager error"]],"mod":[["utils",""]],"struct":[["StateManager",""]],"type":[["CidPair","Intermediary for retrieving state objects and updating actor states"]]});

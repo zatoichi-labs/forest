@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["forest_libp2p"] = [{"text":"impl UpgradeInfo for <a class=\"enum\" href=\"forest_libp2p/rpc/enum.RPCRequest.html\" title=\"enum forest_libp2p::rpc::RPCRequest\">RPCRequest</a>","synthetic":false,"types":["forest_libp2p::rpc::protocol::RPCRequest"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

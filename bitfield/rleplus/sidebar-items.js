@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["decode","Decode an RLE+ encoded bitset into its original form."],["encode","Encode the given bitset into their RLE+ encoded representation."]]});

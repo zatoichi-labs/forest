@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["BitField","Represents a bitfield to track bits set at indexes in the range of `u64`."]],"macro":[["bitvec","Construct a `BitVec` out of a literal array in source code, like `vec!`."]],"mod":[["bitvec_serde",""],["rleplus","RLE+ Bitset Encoding"]]});
